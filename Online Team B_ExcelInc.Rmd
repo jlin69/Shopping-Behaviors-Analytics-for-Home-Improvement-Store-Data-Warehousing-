@@ -1,0 +1,305 @@
+---
+title: "ExcelInc"
+author: "MSBA ONLINE TEAM B"
+date: "11/30/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Table 1. Overall Shopping Behaviors
+
+
+
+```{r table1}
+#Clear the memory
+rm(list = ls())
+
+#Load the RData
+load("MobileVisits.Rdata")
+
+#Visit percentage for each company
+visitchain<-merge(visits,venues,by='venueID')
+visitAbleWare<-subset(visitchain,chain=="AbleWare")
+visitBuildInc<-subset(visitchain,chain=="BuildInc")
+visitCollards<-subset(visitchain,chain=="Collards")
+visitDepotInc<-subset(visitchain,chain=="DepotInc")
+visitExcelInc<-subset(visitchain,chain=="ExcelInc")
+
+percentvisitAbleWare<-length(visitAbleWare$userID)/length(visitchain$userID)
+percentvisitBuildInc<-length(visitBuildInc$userID)/length(visitchain$userID)
+percentvisitCollards<-length(visitCollards$userID)/length(visitchain$userID)
+percentvisitDepotInc<-length(visitDepotInc$userID)/length(visitchain$userID)
+percentvisitExcelInc<-length(visitExcelInc$userID)/length(visitchain$userID)
+
+t1_visits<-c(percentvisitAbleWare, percentvisitBuildInc, percentvisitCollards, 
+             percentvisitDepotInc, percentvisitExcelInc, length(visitchain$userID))
+
+# find total number of trip and each number for 5 company
+numberTrips<- aggregate(chain~userID, visitchain, FUN = length)
+colnames(numberTrips) <- c("userID","totalTrips")
+numberTripAbleWare<- aggregate(chain~userID, visitAbleWare, FUN = length)
+colnames(numberTripAbleWare) <- c("userID","TripForAbleWare")
+numberTripBuildInc<- aggregate(chain~userID, visitBuildInc, FUN = length)
+colnames(numberTripBuildInc) <- c("userID","TripForBuildInc")
+numberTripCollards<- aggregate(chain~userID, visitCollards, FUN = length)
+colnames(numberTripCollards) <- c("userID","TripForCollards")
+numberTripDepotInc<- aggregate(chain~userID, visitDepotInc, FUN = length)
+colnames(numberTripDepotInc) <- c("userID","TripForDepotInc")
+numberTripExcelInc<- aggregate(chain~userID, visitExcelInc, FUN = length)
+colnames(numberTripExcelInc) <- c("userID","TripForExcelInc")
+
+#get purchase/trip details 
+purchase<- merge(numberTrips,numberTripAbleWare,by="userID",all = T)
+purchase<- merge(purchase,numberTripBuildInc,by="userID",all = T)
+purchase<- merge(purchase,numberTripCollards,by="userID",all = T)
+purchase<- merge(purchase,numberTripDepotInc,by="userID",all = T)
+purchase<- merge(purchase,numberTripExcelInc,by="userID",all = T)
+
+#find loyalty customers
+loyaltyAbleWare<-subset(purchase,totalTrips==TripForAbleWare)
+loyaltyBuildInc<-subset(purchase,totalTrips==TripForBuildInc)
+loyaltyCollards<-subset(purchase,totalTrips==TripForCollards)
+loyaltyDepotInc<-subset(purchase,totalTrips==TripForDepotInc)
+loyaltyExcelInc<-subset(purchase,totalTrips==TripForExcelInc)
+
+#customer for each company
+purchase[is.na(purchase)]<- 0
+customerAbleWare<- subset(purchase,TripForAbleWare!=0)
+customerBuildInc<- subset(purchase,TripForBuildInc!=0)
+customerCollards<- subset(purchase,TripForCollards!=0)
+customerDepotInc<- subset(purchase,TripForDepotInc!=0)
+customerExcelInc<- subset(purchase,TripForExcelInc!=0)
+
+percentpurchaseAbleWare<-length(customerAbleWare$userID)/length(purchase$userID)
+percentpurchaseBuildInc<-length(customerBuildInc$userID)/length(purchase$userID)
+percentpurchaseCollards<-length(customerCollards$userID)/length(purchase$userID)
+percentpurchaseDepotInc<-length(customerDepotInc$userID)/length(purchase$userID)
+percentpurchaseExcelInc<-length(customerExcelInc$userID)/length(purchase$userID)
+
+t1_shoppers<-c(percentpurchaseAbleWare, percentpurchaseBuildInc, percentpurchaseCollards, 
+               percentpurchaseDepotInc, percentpurchaseExcelInc, length(purchase$userID))
+
+# %of loyalty customer for each company
+percentLoyalAbleWare<-length(loyaltyAbleWare$userID)/length(customerAbleWare$userID)
+percentLoyalBuildInc<-length(loyaltyBuildInc$userID)/length(customerBuildInc$userID)
+percentLoyalCollards<-length(loyaltyCollards$userID)/length(customerCollards$userID)
+percentLoyalDepotInc<-length(loyaltyDepotInc$userID)/length(customerDepotInc$userID)
+percentLoyalExcelInc<-length(loyaltyExcelInc$userID)/length(customerExcelInc$userID)
+LoyalTotal <- sum(length(loyaltyAbleWare$userID),length(loyaltyBuildInc$userID),
+                         length(loyaltyCollards$userID),length(loyaltyDepotInc$userID),
+                         length(loyaltyExcelInc$userID))
+
+t1_loyalsofshopper<-c(percentLoyalAbleWare, percentLoyalBuildInc, percentLoyalCollards, 
+                      percentLoyalDepotInc, percentLoyalExcelInc, LoyalTotal)
+
+# loyalty %of all loyalty
+totalLoyalty<- sum(length(loyaltyAbleWare$userID),length(loyaltyBuildInc$userID),
+                   length(loyaltyCollards$userID),length(loyaltyDepotInc$userID),length(loyaltyExcelInc$userID))
+
+t1_Pctofallloyal <- c(length(loyaltyAbleWare$userID)/totalLoyalty,
+                    length(loyaltyBuildInc$userID)/totalLoyalty,
+                    length(loyaltyCollards$userID)/totalLoyalty,
+                    length(loyaltyDepotInc$userID)/totalLoyalty,
+                    length(loyaltyExcelInc$userID)/totalLoyalty,
+                    totalLoyalty/totalLoyalty)
+
+# Final table 1
+name=c('AbleWare','BuildInc','Collards','DepotInc','ExcelInc','Total')
+df_t1=as.data.frame(name)
+df_t1$Shoppers = c(paste(round(100*t1_shoppers[-6], 0), "%", sep=""),t1_shoppers[6])
+df_t1$Visits = c(paste(round(100*t1_visits[-6], 0), "%", sep=""),t1_visits[6])
+df_t1$Loyals_of_shoppers = c(paste(round(100*t1_loyalsofshopper[-6], 0), "%", sep=""),t1_loyalsofshopper[6])
+df_t1$Percent_of_total_loyals = paste(round(100*t1_Pctofallloyal, 0), "%", sep="")
+df_t1
+```
+
+## Table 2. Cross-shopping Behaviors
+
+
+
+```{r table2}
+#cross-shopping
+crossA=c(sum(customerAbleWare$TripForAbleWare)/sum(customerAbleWare$totalTrips),
+         sum(customerAbleWare$TripForBuildInc)/sum(customerAbleWare$totalTrips),
+         sum(customerAbleWare$TripForCollards)/sum(customerAbleWare$totalTrips),
+         sum(customerAbleWare$TripForDepotInc)/sum(customerAbleWare$totalTrips),
+         sum(customerAbleWare$TripForExcelInc)/sum(customerAbleWare$totalTrips))
+
+crossB=c(sum(customerBuildInc$TripForAbleWare)/sum(customerBuildInc$totalTrips),
+         sum(customerBuildInc$TripForBuildInc)/sum(customerBuildInc$totalTrips),
+         sum(customerBuildInc$TripForCollards)/sum(customerBuildInc$totalTrips),
+         sum(customerBuildInc$TripForDepotInc)/sum(customerBuildInc$totalTrips),
+         sum(customerBuildInc$TripForExcelInc)/sum(customerBuildInc$totalTrips))
+
+crossC=c(sum(customerCollards$TripForAbleWare)/sum(customerCollards$totalTrips),
+         sum(customerCollards$TripForBuildInc)/sum(customerCollards$totalTrips),
+         sum(customerCollards$TripForCollards)/sum(customerCollards$totalTrips),
+         sum(customerCollards$TripForDepotInc)/sum(customerCollards$totalTrips),
+         sum(customerCollards$TripForExcelInc)/sum(customerCollards$totalTrips))
+
+crossD=c(sum(customerDepotInc$TripForAbleWare)/sum(customerDepotInc$totalTrips),
+         sum(customerDepotInc$TripForBuildInc)/sum(customerDepotInc$totalTrips),
+         sum(customerDepotInc$TripForCollards)/sum(customerDepotInc$totalTrips),
+         sum(customerDepotInc$TripForDepotInc)/sum(customerDepotInc$totalTrips),
+         sum(customerDepotInc$TripForExcelInc)/sum(customerDepotInc$totalTrips))
+
+crossE=c(sum(customerExcelInc$TripForAbleWare)/sum(customerExcelInc$totalTrips),
+         sum(customerExcelInc$TripForBuildInc)/sum(customerExcelInc$totalTrips),
+         sum(customerExcelInc$TripForCollards)/sum(customerExcelInc$totalTrips),
+         sum(customerExcelInc$TripForDepotInc)/sum(customerExcelInc$totalTrips),
+         sum(customerExcelInc$TripForExcelInc)/sum(customerExcelInc$totalTrips))
+
+# Final table 2
+name_t2=c('AbleWare','BuildInc','Collards','DepotInc','ExcelInc') 
+df_t2=as.data.frame(crossA)
+df_t2$crossB=crossB
+df_t2$crossC=crossC
+df_t2$crossD=crossD
+df_t2$crossE=crossE
+df_t21 <- t(df_t2)
+colnames(df_t21) <- name_t2
+df_t21
+
+
+#Create graph for Chain AbleWare, BuildInc, Collards's venues loacations
+library(ggmap)
+library(ggplot2)
+df<-venues[venues$chain != 'BuildInc'& venues$chain != 'DepotInc', ]
+MainStates <- map_data("state")
+ggplot(df, aes(x=longitude, y=latitude, color=chain)) + 
+  geom_polygon( data=MainStates, aes(x=long, y=lat, group=group),
+                color="black", fill="lightblue" )+geom_point()
+
+```
+
+## Table 3. Segementation Analysis
+
+
+
+```{r table3}
+# Define Frequent customer or not in the purchase data table
+purchase$FreqorNot <- ifelse(purchase$totalTrips > 2, "Frequent", "Non-Frequent")
+
+# Find data purchase at E
+df_t3 <- subset(purchase, purchase$TripForExcelInc > 0)
+
+# Define Loyal or not in df_t3
+df_t3$LoyalorNot <- ifelse((df_t3$totalTrips - df_t3$TripForExcelInc) == 0, "Loyal", "Non-Loyal")
+
+# Output the segmentation analysis table
+aggregate(TripForExcelInc ~ LoyalorNot + FreqorNot, data = df_t3, FUN = mean)
+
+
+# Find data purchase at C
+df_t3_C <- subset(purchase, purchase$TripForCollards > 0)
+
+# Define Loyal or not in df_t3_C for C
+df_t3_C$LoyalorNot <- ifelse((df_t3_C$totalTrips - df_t3_C$TripForCollards) == 0, "Loyal", "Non-Loyal")
+
+# Output the segmentation analysis table for C
+aggregate(TripForCollards ~ LoyalorNot + FreqorNot, data = df_t3_C, FUN = mean)
+
+
+# Find data purchase at A
+df_t3_A <- subset(purchase, purchase$TripForAbleWare > 0)
+
+# Define Loyal or not in df_t3_A for A
+df_t3_A$LoyalorNot <- ifelse((df_t3_A$totalTrips - df_t3_A$TripForAbleWare) == 0, "Loyal", "Non-Loyal")
+
+# Output the segmentation analysis table for A
+aggregate(TripForAbleWare ~ LoyalorNot + FreqorNot, data = df_t3_A, FUN = mean)
+
+
+# Find data purchase at B
+df_t3_B <- subset(purchase, purchase$TripForBuildInc > 0)
+
+# Define Loyal or not in df_t3_B for B
+df_t3_B$LoyalorNot <- ifelse((df_t3_B$totalTrips - df_t3_B$TripForBuildInc) == 0, "Loyal", "Non-Loyal")
+
+# Output the segmentation analysis table for B
+aggregate(TripForBuildInc ~ LoyalorNot + FreqorNot, data = df_t3_B, FUN = mean)
+
+
+# Find data purchase at D
+df_t3_D <- subset(purchase, purchase$TripForDepotInc > 0)
+
+# Define Loyal or not in df_t3_D for D
+df_t3_D$LoyalorNot <- ifelse((df_t3_D$totalTrips - df_t3_D$TripForDepotInc) == 0, "Loyal", "Non-Loyal")
+
+# Output the segmentation analysis table for D
+aggregate(TripForDepotInc ~ LoyalorNot + FreqorNot, data = df_t3_D, FUN = mean)
+
+#create a function to calculate distance by using longitude & latitude
+earth.dist <- function (long1, lat1, long2, lat2)
+{
+  rad <- pi/180
+  a1 <- lat1 * rad
+  a2 <- long1 * rad
+  b1 <- lat2 * rad
+  b2 <- long2 * rad
+  dlon <- b2 - a2
+  dlat <- b1 - a1
+  a <- (sin(dlat/2))^2 + cos(a1) * cos(b1) * (sin(dlon/2))^2
+  c <- 2 * atan2(sqrt(a), sqrt(1 - a))
+  R <- 3958.8 # in miles
+  d <- R * c
+  return(d)
+}
+
+
+#merger user's long lat into visitchain
+visitVenueUsers<-merge(visitchain,users,by='userID')
+
+#rename visitvenueusers name
+colnames(visitVenueUsers) <- c('userID', 'venueID', 'chain', 'latv','longv', 'latu','longu' )
+
+
+#calculate Distance between user's home and venue
+visitVenueUsers$dis <-earth.dist(visitVenueUsers$longu,visitVenueUsers$latu,visitVenueUsers$longv,visitVenueUsers$latv)
+
+#calculate the average distance for each user
+avgDis <- aggregate(dis~userID, data = visitVenueUsers, FUN = mean)
+
+# smallThanFive <- subset(avgDis, dis<=5 )
+
+#create a table to aggregate all information(loyal? Frequent? close to home?) for each users
+df_t3 <- merge(df_t3, avgDis, by = 'userID')
+df_t4 <- df_t3
+df_t4$closeToHome <- ifelse(df_t4$dis > 5, "Not-Close", "Close")
+
+#Chain A customer Close to home or not
+chainAcustomer <- subset(df_t4, df_t4$TripForAbleWare >0)
+chainAClose <- aggregate(userID~closeToHome, data = chainAcustomer, FUN = length)
+
+
+#Chain B customer Close to home or not
+chainBcustomer <- subset(df_t4, df_t4$TripForBuildInc >0)
+chainBClose <- aggregate(userID~closeToHome, data = chainBcustomer, FUN = length)
+
+#Chain C customer Close to home or not
+chainCcustomer <- subset(df_t4, df_t4$TripForCollards >0)
+chainCClose <- aggregate(userID~closeToHome, data = chainCcustomer, FUN = length)
+
+#Chain D customer Close to home or not
+chainDcustomer <- subset(df_t4, df_t4$TripForDepotInc >0)
+chainDClose <- aggregate(userID~closeToHome, data = chainDcustomer, FUN = length)
+
+
+#Chain E customer Close to home or not
+chainEcustomer <- subset(df_t4, df_t4$TripForExcelInc >0)
+chainEClose <- aggregate(userID~closeToHome, data = chainEcustomer, FUN = length)
+
+#CloseToHome customers by each Chain
+closeToHome <- as.data.frame(chainAClose$userID)
+closeToHome$ChainB <- chainBClose$userID
+closeToHome$ChainC <- chainCClose$userID
+closeToHome$ChainD <- chainDClose$userID
+closeToHome$ChainE <- chainEClose$userID
+closeToHome <- t(closeToHome)
+row.names(closeToHome) <- name_t2
+colnames(closeToHome) <- c('CloseToHome', 'NotClose')
+closeToHome
+```
